@@ -34,7 +34,9 @@ function ownedVariants(s,n){return V.filter(v=>vhas(s,n,v))}
 function has(s,n){return ownedVariants(s,n).length>0}
 function complete(s,n){let a=availableVariants(s,n);return a.length>0&&a.every(v=>vhas(s,n,v))}
 function nearComplete(s,n){let a=availableVariants(s,n),miss=a.filter(v=>!vhas(s,n,v));return a.length>1&&miss.length===1&&has(s,n)}
-function hasDupes(s,n){return availableVariants(s,n).some(v=>vqty(s,n,v)>1)}\nfunction physicalCount(){return S.reduce((t,s)=>t+nums(s).reduce((a,n)=>a+availableVariants(s,n).reduce((b,v)=>b+vqty(s,n,v),0),0),0)}\nfunction extraCopies(){return S.reduce((t,s)=>t+nums(s).reduce((a,n)=>a+availableVariants(s,n).reduce((b,v)=>b+Math.max(0,vqty(s,n,v)-1),0),0),0)}
+function hasDupes(s,n){return availableVariants(s,n).some(v=>vqty(s,n,v)>1)}
+function physicalCount(){return S.reduce((t,s)=>t+nums(s).reduce((a,n)=>a+availableVariants(s,n).reduce((b,v)=>b+vqty(s,n,v),0),0),0)}
+function extraCopies(){return S.reduce((t,s)=>t+nums(s).reduce((a,n)=>a+availableVariants(s,n).reduce((b,v)=>b+Math.max(0,vqty(s,n,v)-1),0),0),0)}
 function wishkey(s,n,v){return "wish#"+vkey(s,n,v)}
 function wished(s,n,v){return store[wishkey(s,n,v)]===true}
 function hasWish(s,n){return availableVariants(s,n).some(v=>wished(s,n,v))}
