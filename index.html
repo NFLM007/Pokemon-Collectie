@@ -76,31 +76,31 @@ const COUNTRY_GROUPS=[
  ["🌍","Internationaal (Engels)",["en"],false],
  ["🇯🇵","Japan",["ja"],false],
  ["🇨🇳","China",["zh-cn"],false],
- ["🇫🇷","Frankrijk",["fr"],true],
- ["🇩🇪","Duitsland",["de"],true],
- ["🇪🇸","Spanje",["es"],true],
- ["🇮🇹","Italië",["it"],true],
+ ["🇫🇷","Frankrijk",["fr"],false],
+ ["🇩🇪","Duitsland",["de"],false],
+ ["🇪🇸","Spanje",["es"],false],
+ ["🇮🇹","Italië",["it"],false],
  ["🇰🇷","Zuid-Korea",["ko"],false],
  ["🇹🇼","Taiwan",["zh-tw"],false],
  ["🇹🇭","Thailand",["th"],false],
  ["🇮🇩","Indonesië",["id"],false],
- ["🇧🇷","Brazilië",["pt-br"],true],
- ["🇵🇹","Portugal",["pt-pt"],true],
- ["🇳🇱","Nederland",["nl"],true],
- ["🇵🇱","Polen",["pl"],true],
- ["🇷🇺","Rusland",["ru"],true]
+ ["🇧🇷","Brazilië",["pt-br"],false],
+ ["🇵🇹","Portugal",["pt-pt"],false],
+ ["🇳🇱","Nederland",["nl"],false],
+ ["🇵🇱","Polen",["pl"],false],
+ ["🇷🇺","Rusland",["ru"],false]
 ];
 function setLang(s){return s._lang||"en"}
 function renderCollectionChooser(){
  searchMode("chooser");home=false;navOn("navCollection");document.getElementById("binderpager")?.remove();document.getElementById("q").value="";document.getElementById("homeactions").style.display="none";document.getElementById("boostbar").style.display="none";document.getElementById("main").classList.remove("inset");document.querySelector(".setcontrols").style.display="none";document.getElementById("setfilters").style.display="none";
  let g=document.getElementById("grid");
- if(!collectionRegion){
+ if(collectionRegion===null){
   document.getElementById("sum").innerHTML='<div style="font-weight:900;font-size:17px;margin:4px 0">Kies een land of regio</div><div class="setsearchnote">Daarna zie je de beschikbare Pokémon-sets.</div>';
   g.className="homegrid countryChooser";g.innerHTML="";
-  COUNTRY_GROUPS.forEach((r,ri)=>{let native=S.filter(s=>r[2].includes(setLang(s))).length,count=native||(r[3]?S.filter(s=>setLang(s)==="en").length:0),b=document.createElement("button");b.className="countrytile";b.innerHTML='<span class="flag">'+r[0]+'</span><strong>'+r[1]+'</strong><small>'+count+' sets</small>';b.onclick=()=>{collectionRegion=ri;renderCollectionChooser()};g.appendChild(b)});
+  COUNTRY_GROUPS.forEach((r,ri)=>{let count=S.filter(s=>r[2].includes(setLang(s))).length;if(!count)return;let b=document.createElement("button");b.className="countrytile";b.innerHTML='<span class="flag">'+r[0]+'</span><strong>'+r[1]+'</strong><small>'+count+' sets</small>';b.onclick=()=>{collectionRegion=ri;renderCollectionChooser()};g.appendChild(b)});
   return
  }
- let region=COUNTRY_GROUPS[collectionRegion],native=S.map((s,i)=>({s,i})).filter(o=>region[2].includes(setLang(o.s))),indexes=native.length?native:(region[3]?S.map((s,i)=>({s,i})).filter(o=>setLang(o.s)==="en"):[]);
+ let region=COUNTRY_GROUPS[collectionRegion],indexes=S.map((s,i)=>({s,i})).filter(o=>region[2].includes(setLang(o.s)));
  document.getElementById("sum").innerHTML='<button class="backbtn" id="countryBack">← Landen</button><div class="collectionTools"><button class="actionbtn" id="collectionBooster">📦 Booster-modus</button><div class="boostbar" id="collectionBoostbar" style="display:none"><select id="collectionBoostSet">'+indexes.map(o=>'<option value="'+o.i+'">'+o.s[0].replace(/^.{2}\s/,"")+'</option>').join("")+'</select><input id="collectionBoostNum" inputmode="numeric" pattern="[0-9]*" placeholder="#" style="font-size:16px"><button class="boostadd" id="collectionBoostGo">Open</button></div></div><div style="font-weight:900;font-size:16px;margin:7px 0 4px">'+region[0]+' '+region[1]+'</div>';
  g.className="homegrid collectionChooser";g.innerHTML="";
  indexes.forEach(o=>{let s=o.s,i=o.i,own=nums(s).filter(n=>has(s,n)).length,total=nums(s).length,pct=total?Math.round(own/total*100):0,b=document.createElement("button");b.className="settile";let si=setImg(s);b.innerHTML=(si?'<img class="setimg" loading="lazy" src="'+si+'" alt="'+s[0]+'">':'<div class="setimg"></div>')+'<span class="setname">'+s[0].replace(/^.{2}\s/,"")+'</span><span class="pbar"><span class="pfill" style="width:'+pct+'%"></span></span><span class="setprogress">'+own+' / '+total+' · '+pct+'%</span>';b.onclick=()=>{cur=i;home=false;location.hash="set="+encodeURIComponent(s[0]);document.querySelector(".setcontrols").style.display="flex";document.getElementById("setfilters").style.display="grid";render()};g.appendChild(b)});
