@@ -25,7 +25,15 @@ const S=[
 ["Scarlet & Violet Energy","sve","sve",16,[5,9,12,14,16]]
 ] 
 async function loadWorldCatalog(){
- const baseIds=new Set(S.map(s=>s[2])),seen=new Set(baseIds);
+ const CACHE_KEY="poke-world-catalog-v2";
+ try{
+  let cached=JSON.parse(localStorage.getItem(CACHE_KEY)||"null");
+  if(Array.isArray(cached)&&cached.length){
+   cached.forEach(d=>{if(S.some(s=>(s._catalogId||((s._lang||"en")+":"+s[2]))===d.catalogId))return;let s=[d.name,d.imgCode,d.id,d.total,[]];s._lang=d.lang;s._catalogId=d.catalogId;s._logo=d.logo||"";s._official=d.official||d.total;s._dynamic=true;S.push(s)});
+   if(activeView==="chooser")renderCollectionChooser();
+  }
+ }catch(e){}
+ const baseIds=new Set(S.filter(s=>!s._dynamic).map(s=>s[2])),seen=new Set(baseIds);
  const regions=[
   ["en","🌍 "],["ja","🇯🇵 "],["ko","🇰🇷 "],["zh-tw","🇹🇼 "],["zh-cn","🇨🇳 "],
   ["th","🇹🇭 "],["id","🇮🇩 "],["fr","🇫🇷 "],["de","🇩🇪 "],["es","🇪🇸 "],
@@ -50,6 +58,10 @@ async function loadWorldCatalog(){
    }catch(e){}
   }
  }
+ try{
+  let packed=S.filter(s=>s._dynamic).map(s=>({name:s[0],imgCode:s[1],id:s[2],total:s[3],lang:s._lang,catalogId:s._catalogId,logo:s._logo||"",official:s._official||s[3]}));
+  localStorage.setItem(CACHE_KEY,JSON.stringify(packed))
+ }catch(e){}
 }
 const CSVQ_OLD={"Chaos Rising#21#Normal":2,"Perfect Order#82#Normal":3,"Mega Evolution#9#Normal":2,"Perfect Order#35#Normal":2,"Phantasmal Flames#34#Holo":3,"Perfect Order#77#Normal":3,"Perfect Order#64#Normal":2,"Perfect Order#59#Normal":2,"Mega Evolution#10#Holo":2,"Perfect Order#34#Normal":2,"Mega Evolution Energy#7#Normal":4,"Sword & Shield#130#Normal":4,"Phantasmal Flames#10#Normal":2,"Fusion Strike#240#Normal":2,"Perfect Order#86#Holo":2,"Perfect Order#27#Normal":2,"Battle Styles#125#Normal":2,"Phantasmal Flames#23#Normal":22,"Mega Evolution Energy#1#Normal":3,"Perfect Order#5#Normal":2,"Mega Evolution Energy#6#Normal":2,"Perfect Order#26#Normal":2,"Perfect Order#9#Normal":3,"Chaos Rising#53#Normal":2,"Pitch Black#22#Normal":2,"Perfect Order#52#Normal":2,"Pitch Black#36#Normal":2,"Vivid Voltage#112#Normal":4,"Perfect Order#48#Normal":3,"Phantasmal Flames#16#Normal":2,"Perfect Order#61#Reverse":3,"Fusion Strike#186#Normal":2,"Sword & Shield#164#Normal":4,"Perfect Order#18#Normal":2,"Mega Evolution#69#Reverse":2,"Perfect Order#58#Normal":2,"Perfect Order#86#Reverse":2,"Mega Evolution Energy#2#Normal":2,"Perfect Order#73#Normal":2,"Perfect Order#36#Normal":2,"Chilling Reign#114#Normal":2,"Mega Evolution#8#Normal":2,"Chaos Rising#24#Reverse":2,"Perfect Order#43#Normal":2,"Fusion Strike#226#Normal":2,"Mega Evolution Energy#5#Normal":4,"Mega Evolution Energy#3#Normal":5,"Vivid Voltage#121#Normal":2,"Perfect Order#2#Normal":2,"Sword & Shield#163#Normal":2,"Phantasmal Flames#72#Normal":2,"Perfect Order#46#Normal":2,"Perfect Order#54#Holo":2,"Shining Fates#59#Normal":2,"Perfect Order#57#Normal":2,"Mega Evolution#28#Holo":2,"Mega Evolution Energy#8#Normal":5,"Perfect Order#42#Normal":3,"Perfect Order#84#Normal":2,"Sword & Shield#165#Normal":4,"Sword & Shield#131#Normal":3,"Rebel Clash#127#Normal":3};let meta=JSON.parse(localStorage.getItem("poke-meta-v1")||"{}"),cur=0,home=true,binderPage=0,binderSet="all",seed={},store=JSON.parse(localStorage.getItem("poke-all-v3")||"{}");const V=["Normal","Holo","Reverse","Pokémon Day 2026","IR","UR","SIR","MHR/HR","1st Edition","W Promo"];
 function key(s,n){return s[0]+"#"+n}
