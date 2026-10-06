@@ -73,7 +73,7 @@ async function hydrateSet(s,cards){let lang=s._lang||"en",todo=cards.filter(x=>{
 async function loadCardDetail(s,n){let lang=s._lang||"en",k=mkey(s,n),apiId=s[2]+"-"+String(n).padStart(3,"0"),m=meta[k];if(m?._detail)return;if(!m)meta[k]={name:"Kaart "+String(n).padStart(3,"0"),rarity:"",variants:null};try{let r=await fetch("https://api.tcgdex.net/v2/"+lang+"/cards/"+apiId);if(!r.ok)return;let d=await r.json();meta[k]={...meta[k],name:d.name||meta[k].name,image:d.image||meta[k].image,rarity:d.rarity||meta[k].rarity,variants:d.variants||meta[k].variants,_detail:true};localStorage.setItem("poke-meta-v1",JSON.stringify(meta));render()}catch(e){}}
 let collectionRegion=null;
 const COUNTRY_GROUPS=[
- ["🇺🇸","Engels / Internationaal",["en"]],
+ ["🌍","Internationaal (Engels)",["en"]],
  ["🇯🇵","Japan",["ja"]],
  ["🇨🇳","China",["zh-cn"]],
  ["🇫🇷","Frankrijk",["fr"]],
