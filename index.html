@@ -73,22 +73,22 @@ async function hydrateSet(s,cards){let lang=s._lang||"en",todo=cards.filter(x=>{
 async function loadCardDetail(s,n){let lang=s._lang||"en",k=mkey(s,n),apiId=s[2]+"-"+String(n).padStart(3,"0"),m=meta[k];if(m?._detail)return;if(!m)meta[k]={name:"Kaart "+String(n).padStart(3,"0"),rarity:"",variants:null};try{let r=await fetch("https://api.tcgdex.net/v2/"+lang+"/cards/"+apiId);if(!r.ok)return;let d=await r.json();meta[k]={...meta[k],name:d.name||meta[k].name,image:d.image||meta[k].image,rarity:d.rarity||meta[k].rarity,variants:d.variants||meta[k].variants,_detail:true};localStorage.setItem("poke-meta-v1",JSON.stringify(meta));render()}catch(e){}}
 let collectionRegion=null;
 const COUNTRY_GROUPS=[
- ["🌍","Internationaal (Engels)",["en"]],
- ["🇯🇵","Japan",["ja"]],
- ["🇨🇳","China",["zh-cn"]],
- ["🇫🇷","Frankrijk",["fr"]],
- ["🇩🇪","Duitsland",["de"]],
- ["🇪🇸","Spanje",["es"]],
- ["🇮🇹","Italië",["it"]],
- ["🇰🇷","Zuid-Korea",["ko"]],
- ["🇹🇼","Taiwan",["zh-tw"]],
- ["🇹🇭","Thailand",["th"]],
- ["🇮🇩","Indonesië",["id"]],
- ["🇧🇷","Brazilië",["pt-br"]],
- ["🇵🇹","Portugal",["pt-pt"]],
- ["🇳🇱","Nederland",["nl"]],
- ["🇵🇱","Polen",["pl"]],
- ["🇷🇺","Rusland",["ru"]]
+ ["🌍","Internationaal (Engels)",["en"],false],
+ ["🇯🇵","Japan",["ja"],false],
+ ["🇨🇳","China",["zh-cn"],false],
+ ["🇫🇷","Frankrijk",["fr"],true],
+ ["🇩🇪","Duitsland",["de"],true],
+ ["🇪🇸","Spanje",["es"],true],
+ ["🇮🇹","Italië",["it"],true],
+ ["🇰🇷","Zuid-Korea",["ko"],false],
+ ["🇹🇼","Taiwan",["zh-tw"],false],
+ ["🇹🇭","Thailand",["th"],false],
+ ["🇮🇩","Indonesië",["id"],false],
+ ["🇧🇷","Brazilië",["pt-br"],true],
+ ["🇵🇹","Portugal",["pt-pt"],true],
+ ["🇳🇱","Nederland",["nl"],true],
+ ["🇵🇱","Polen",["pl"],true],
+ ["🇷🇺","Rusland",["ru"],true]
 ];
 function setLang(s){return s._lang||"en"}
 function renderCollectionChooser(){
@@ -97,10 +97,10 @@ function renderCollectionChooser(){
  if(!collectionRegion){
   document.getElementById("sum").innerHTML='<div style="font-weight:900;font-size:17px;margin:4px 0">Kies een land of regio</div><div class="setsearchnote">Daarna zie je de beschikbare Pokémon-sets.</div>';
   g.className="homegrid countryChooser";g.innerHTML="";
-  COUNTRY_GROUPS.forEach((r,ri)=>{let count=S.filter(s=>r[2].includes(setLang(s))).length,b=document.createElement("button");b.className="countrytile";b.innerHTML='<span class="flag">'+r[0]+'</span><strong>'+r[1]+'</strong><small>'+count+' sets</small>';b.onclick=()=>{collectionRegion=ri;renderCollectionChooser()};g.appendChild(b)});
+  COUNTRY_GROUPS.forEach((r,ri)=>{let native=S.filter(s=>r[2].includes(setLang(s))).length,count=native||(r[3]?S.filter(s=>setLang(s)==="en").length:0),b=document.createElement("button");b.className="countrytile";b.innerHTML='<span class="flag">'+r[0]+'</span><strong>'+r[1]+'</strong><small>'+count+' sets</small>';b.onclick=()=>{collectionRegion=ri;renderCollectionChooser()};g.appendChild(b)});
   return
  }
- let region=COUNTRY_GROUPS[collectionRegion],indexes=S.map((s,i)=>({s,i})).filter(o=>region[2].includes(setLang(o.s)));
+ let region=COUNTRY_GROUPS[collectionRegion],native=S.map((s,i)=>({s,i})).filter(o=>region[2].includes(setLang(o.s))),indexes=native.length?native:(region[3]?S.map((s,i)=>({s,i})).filter(o=>setLang(o.s)==="en"):[]);
  document.getElementById("sum").innerHTML='<button class="backbtn" id="countryBack">← Landen</button><div class="collectionTools"><button class="actionbtn" id="collectionBooster">📦 Booster-modus</button><div class="boostbar" id="collectionBoostbar" style="display:none"><select id="collectionBoostSet">'+indexes.map(o=>'<option value="'+o.i+'">'+o.s[0].replace(/^.{2}\s/,"")+'</option>').join("")+'</select><input id="collectionBoostNum" inputmode="numeric" pattern="[0-9]*" placeholder="#" style="font-size:16px"><button class="boostadd" id="collectionBoostGo">Open</button></div></div><div style="font-weight:900;font-size:16px;margin:7px 0 4px">'+region[0]+' '+region[1]+'</div>';
  g.className="homegrid collectionChooser";g.innerHTML="";
  indexes.forEach(o=>{let s=o.s,i=o.i,own=nums(s).filter(n=>has(s,n)).length,total=nums(s).length,pct=total?Math.round(own/total*100):0,b=document.createElement("button");b.className="settile";let si=setImg(s);b.innerHTML=(si?'<img class="setimg" loading="lazy" src="'+si+'" alt="'+s[0]+'">':'<div class="setimg"></div>')+'<span class="setname">'+s[0].replace(/^.{2}\s/,"")+'</span><span class="pbar"><span class="pfill" style="width:'+pct+'%"></span></span><span class="setprogress">'+own+' / '+total+' · '+pct+'%</span>';b.onclick=()=>{cur=i;home=false;location.hash="set="+encodeURIComponent(s[0]);document.querySelector(".setcontrols").style.display="flex";document.getElementById("setfilters").style.display="grid";render()};g.appendChild(b)});
