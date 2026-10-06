@@ -54,12 +54,18 @@ function syncFilterButtons(){
  document.getElementById("allBtn").classList.toggle("on",v==="all");
  document.getElementById("ownedBtn").classList.toggle("on",v==="yes");
  document.getElementById("completeBtn").classList.toggle("on",v==="complete");
- document.getElementById("missingBtn").classList.toggle("on",v==="no");\n document.getElementById("nearBtn").classList.toggle("on",v==="near");\n document.getElementById("dupeBtn").classList.toggle("on",v==="dupes");\n document.getElementById("wishBtn").classList.toggle("on",v==="wish")
+ document.getElementById("missingBtn").classList.toggle("on",v==="no");
+ document.getElementById("nearBtn").classList.toggle("on",v==="near");
+ document.getElementById("dupeBtn").classList.toggle("on",v==="dupes");
+ document.getElementById("wishBtn").classList.toggle("on",v==="wish")
 }
 document.getElementById("allBtn").onclick=()=>{let f=document.getElementById("f");f.value="all";syncFilterButtons();render()};
 document.getElementById("completeBtn").onclick=()=>{let f=document.getElementById("f");f.value="complete";syncFilterButtons();render()};
 document.getElementById("ownedBtn").onclick=()=>{let f=document.getElementById("f");f.value=f.value==="yes"?"all":"yes";syncFilterButtons();render()};
-document.getElementById("nearBtn").onclick=()=>{let f=document.getElementById("f");f.value="near";syncFilterButtons();render()};\ndocument.getElementById("dupeBtn").onclick=()=>{let f=document.getElementById("f");f.value="dupes";syncFilterButtons();render()};\ndocument.getElementById("wishBtn").onclick=()=>{let f=document.getElementById("f");f.value="wish";syncFilterButtons();render()};\ndocument.getElementById("missingBtn").onclick=()=>{let f=document.getElementById("f");f.value=f.value==="no"?"all":"no";syncFilterButtons();render()};
+document.getElementById("nearBtn").onclick=()=>{let f=document.getElementById("f");f.value="near";syncFilterButtons();render()};
+document.getElementById("dupeBtn").onclick=()=>{let f=document.getElementById("f");f.value="dupes";syncFilterButtons();render()};
+document.getElementById("wishBtn").onclick=()=>{let f=document.getElementById("f");f.value="wish";syncFilterButtons();render()};
+document.getElementById("missingBtn").onclick=()=>{let f=document.getElementById("f");f.value=f.value==="no"?"all":"no";syncFilterButtons();render()};
 async function init(){
   try{let r=await fetch("csv-seed.json?v=20261006-1");if(r.ok)seed=await r.json()}catch(e){}
   tabs();
