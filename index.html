@@ -163,10 +163,11 @@ document.getElementById("dupeBtn").onclick=()=>{let f=document.getElementById("f
 document.getElementById("missingBtn").onclick=()=>{let f=document.getElementById("f");f.value=f.value==="no"?"all":"no";syncFilterButtons();render()};
 async function init(){
   try{let r=await fetch("csv-seed.json?v=20261006-1");if(r.ok)seed=await r.json()}catch(e){}
-  await loadWorldCatalog();
   tabs();
   history.replaceState(null,"",location.pathname+location.search);
-  renderHome()
+  renderHome();
+  // Load the worldwide catalogue in the background so the app and country screen open immediately.
+  loadWorldCatalog().then(()=>{if(activeView==="chooser")renderCollectionChooser()}).catch(()=>{})
 }
 window.addEventListener("hashchange",()=>{
   if(location.hash==="#collection"){renderCollectionChooser();return}
