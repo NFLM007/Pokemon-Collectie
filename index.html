@@ -114,13 +114,10 @@ async function loadCloudCollection(){
  let {data:{user}}=await sb.auth.getUser();if(!user)return;cloudUser=user;
  let {data,error}=await sb.from("collection_cards").select("set_id,card_number,variant,quantity").eq("user_id",user.id);
  if(error){console.error(error);return}
- if(data&&data.length){data.forEach(r=>{let s=S.find(x=>x[2]===r.set_id);if(!s)return;let n=parseInt(r.card_number,10);if(!Number.isFinite(n))return;store[vkey(s,n,r.variant)]=r.quantity>0;store[vkey(s,n,r.variant)+"#qty"]=r.quantity});localStorage.setItem("poke-all-v3",JSON.stringify(store))}
- else await migrateLocalCollection(user.id);
- cloudReady=true
-}
-async function migrateLocalCollection(uid){
- let rows=[];S.forEach(s=>nums(s).forEach(n=>V.forEach(v=>{let q=vqty(s,n,v);if(q>0)rows.push({user_id:uid,set_id:s[2],card_number:String(n),variant:v,quantity:q,updated_at:new Date().toISOString()})})));
- if(rows.length){for(let i=0;i<rows.length;i+=200){let {error}=await sb.from("collection_cards").upsert(rows.slice(i,i+200),{onConflict:"user_id,set_id,card_number,variant"});if(error){console.error(error);return}}}
+ // Cloud data is authoritative per account. Never copy another account's local browser data.
+ store={};
+ if(data&&data.length)data.forEach(r=>{let s=S.find(x=>x[2]===r.set_id);if(!s)return;let n=parseInt(r.card_number,10);if(!Number.isFinite(n))return;store[vkey(s,n,r.variant)]=r.quantity>0;store[vkey(s,n,r.variant)+"#qty"]=r.quantity});
+ localStorage.setItem("poke-all-v3",JSON.stringify(store));cloudReady=true
 }
 function queueCloudCard(s,n,v,q){if(!cloudReady||!cloudUser)return;clearTimeout(cloudTimer);cloudTimer=setTimeout(async()=>{let row={user_id:cloudUser.id,set_id:s[2],card_number:String(n),variant:v,quantity:q,updated_at:new Date().toISOString()};let {error}=await sb.from("collection_cards").upsert(row,{onConflict:"user_id,set_id,card_number,variant"});if(error)console.error(error)},250)}
 async function ensureProfile(){let {data:{user}}=await sb.auth.getUser();if(!user)return null;let {data}=await sb.from("profiles").select("id,username,display_name").eq("id",user.id).maybeSingle();if(!data){let username="trainer_"+user.id.slice(0,8);let r=await sb.from("profiles").insert({id:user.id,username,display_name:""}).select().single();data=r.data}return data}function nums(s){if(Array.isArray(s._nums)&&s._nums.length)return s._nums;return s[3]?[...Array(s[3])].map((_,i)=>i+1):s[4]}function img(s,n){let m=meta[mkey(s,n)];if(m?.image)return m.image+"/high.webp";return "https://images.scrydex.com/pokemon/"+s[1]+"-"+n+"/medium"}function setImg(s){return SET_IMAGES[s[0]]||s._logo||""}
