@@ -437,7 +437,7 @@ function gameState(){try{return Object.assign({points:0,packs:0,cards:[],wins:0,
 function saveGame(g){localStorage.setItem(GAME_KEY,JSON.stringify(g))}
 function gameLevel(g){return Math.floor((g.xp||0)/250)+1}
 function gameLevelXp(g){return (g.xp||0)%250}
-function gameReward(g,baseXp){if(good=false)return;g.combo=(g.combo||0)+1;g.bestCombo=Math.max(g.bestCombo||0,g.combo);g.xp=(g.xp||0)+baseXp+Math.min(20,(g.combo-1)*2)}
+
 function gameHudHtml(g){let lv=gameLevel(g),xp=gameLevelXp(g),pct=Math.round(xp/250*100);return '<div class="gameTrainer"><div class="gameTrainerTop"><div><small>TRAINER LEVEL</small><b>LV. '+lv+'</b></div><div class="gameCombo">🔥 <b>'+g.combo+'×</b><small>COMBO</small></div></div><div class="gameXpBar"><i style="width:'+pct+'%"></i></div><div class="gameXpText">'+xp+' / 250 XP · BEST COMBO '+(g.bestCombo||0)+'×</div></div>'}
 function gameApplyAnswer(g,good,xp){if(good){g.combo=(g.combo||0)+1;g.bestCombo=Math.max(g.bestCombo||0,g.combo);g.xp=(g.xp||0)+xp+Math.min(20,(g.combo-1)*2)}else g.combo=0}
 function refreshGameHud(g){let h=document.getElementById("gameTrainerHud");if(h)h.innerHTML=gameHudHtml(g)}
