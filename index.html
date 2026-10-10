@@ -295,7 +295,7 @@ const CSVQ_OLD={"Chaos Rising#21#Normal":2,"Perfect Order#82#Normal":3,"Mega Evo
 function key(s,n){return s[0]+"#"+n}
 function vkey(s,n,v){return key(s,n)+"#"+v}
 function legacy(s,n){let k=key(s,n);return k in store?store[k]:s[4].includes(n)}
-function vqty(s,n,v){let q=store[vkey(s,n,v)+"#qty"];if(Number.isFinite(+q))return +q;if(!useSeed)return 0;let a=seed[key(s,n)];if(Array.isArray(a)){let base=a.filter(x=>x===v).length;/* No synthetic rare variants from holo seed */if(base){return base}}let k=vkey(s,n,v);if(k in store)return store[k]?1:0;return 0}
+function vqty(s,n,v){let q=store[vkey(s,n,v)+"#qty"];if(Number.isFinite(+q))return +q;if(!useSeed)return 0;let a=seed[key(s,n)];if(Array.isArray(a)){let base=a.filter(x=>x===v).length;if(!base&&["IR","UR","SIR","MHR/HR"].includes(v))base=a.filter(x=>x==="Holo").length;if(base){return base}}let k=vkey(s,n,v);if(k in store)return store[k]?1:0;return 0}
 function vhas(s,n,v){return vqty(s,n,v)>0}
 function ownedVariants(s,n){return V.filter(v=>vhas(s,n,v))}
 function has(s,n){return ownedVariants(s,n).length>0}
@@ -373,94 +373,29 @@ function renderCollectionChooser(){setTimeout(refreshProAnalytics,0);
   }
  }
  if(collectionRegion===null){
-  document.getElementById("sum").innerHTML=searchBox()+'<button id="collectionPriceEntry" class="collectionPriceEntry">💎 Prijzen & Waarde</button><button id="collectionAuditEntry" class="collectionPriceEntry">🔍 Controleer volledige collectie</button>'+'<div style="font-weight:900;font-size:17px;margin:4px 0">'+t("choose")+'</div><div class="setsearchnote">'+t("after")+'</div>';bindGlobalSearch();document.getElementById("collectionPriceEntry").onclick=renderCollectionPrices;document.getElementById("collectionAuditEntry").onclick=renderCollectionValidityAudit;
+  document.getElementById("sum").innerHTML=searchBox()+'<button id="collectionPriceEntry" class="collectionPriceEntry">💎 Prijzen & Waarde</button>'+'<div style="font-weight:900;font-size:17px;margin:4px 0">'+t("choose")+'</div><div class="setsearchnote">'+t("after")+'</div>';bindGlobalSearch();document.getElementById("collectionPriceEntry").onclick=renderCollectionPrices;
   g.className="homegrid countryChooser";g.innerHTML="";
   COUNTRY_GROUPS.forEach((r,ri)=>{let count=S.filter(s=>r[2].includes(setLang(s))).length;if(!count)return;let b=document.createElement("button");b.className="countrytile";b.innerHTML='<span class="flag">'+r[0]+'</span><strong>'+r[1]+'</strong><small>'+count+' sets</small>';b.onclick=()=>{collectionRegion=ri;renderCollectionChooser()};g.appendChild(b)});
   return
  }
  let region=COUNTRY_GROUPS[collectionRegion],indexes=S.map((s,i)=>({s,i})).filter(o=>region[2].includes(setLang(o.s)));
- document.getElementById("sum").innerHTML=searchBox()+'<button id="collectionPriceEntry" class="collectionPriceEntry">💎 Prijzen & Waarde</button><button id="collectionAuditEntry" class="collectionPriceEntry">🔍 Controleer volledige collectie</button>'+'<button class="backbtn" id="countryBack">'+t("countries")+'</button><div class="collectionTools"><button class="actionbtn" id="collectionBooster">t("booster")</button><div class="boostbar" id="collectionBoostbar" style="display:none"><select id="collectionBoostSet">'+indexes.map(o=>'<option value="'+o.i+'">'+o.s[0].replace(/^.{2}\s/,"")+'</option>').join("")+'</select><input id="collectionBoostNum" inputmode="numeric" pattern="[0-9]*" placeholder="#" style="font-size:16px"><button class="boostadd" id="collectionBoostGo">t("open")</button></div></div><div style="font-weight:900;font-size:16px;margin:7px 0 4px">'+region[0]+' '+region[1]+'</div>';
- bindGlobalSearch();document.getElementById("collectionPriceEntry").onclick=renderCollectionPrices;document.getElementById("collectionAuditEntry").onclick=renderCollectionValidityAudit;g.className="homegrid collectionChooser";g.innerHTML="";
+ document.getElementById("sum").innerHTML=searchBox()+'<button id="collectionPriceEntry" class="collectionPriceEntry">💎 Prijzen & Waarde</button>'+'<button class="backbtn" id="countryBack">'+t("countries")+'</button><div class="collectionTools"><button class="actionbtn" id="collectionBooster">t("booster")</button><div class="boostbar" id="collectionBoostbar" style="display:none"><select id="collectionBoostSet">'+indexes.map(o=>'<option value="'+o.i+'">'+o.s[0].replace(/^.{2}\s/,"")+'</option>').join("")+'</select><input id="collectionBoostNum" inputmode="numeric" pattern="[0-9]*" placeholder="#" style="font-size:16px"><button class="boostadd" id="collectionBoostGo">t("open")</button></div></div><div style="font-weight:900;font-size:16px;margin:7px 0 4px">'+region[0]+' '+region[1]+'</div>';
+ bindGlobalSearch();document.getElementById("collectionPriceEntry").onclick=renderCollectionPrices;g.className="homegrid collectionChooser";g.innerHTML="";
  indexes.forEach(o=>{let s=o.s,i=o.i,own=nums(s).filter(n=>has(s,n)).length,total=nums(s).length,pct=total?Math.round(own/total*100):0,b=document.createElement("button");b.className="settile";let si=setImg(s);b.innerHTML=(si?'<img class="setimg" loading="lazy" src="'+si+'" alt="'+s[0]+'">':'<div class="setimg"></div>')+'<span class="setname">'+s[0].replace(/^.{2}\s/,"")+'</span><span class="pbar"><span class="pfill" style="width:'+pct+'%"></span></span><span class="setprogress">'+own+' / '+total+' · '+pct+'%</span>';b.onclick=()=>{cur=i;home=false;location.hash="set="+encodeURIComponent(s[0]);document.querySelector(".setcontrols").style.display="flex";document.getElementById("setfilters").style.display="grid";render()};g.appendChild(b)});
  document.getElementById("countryBack").onclick=()=>{collectionRegion=null;renderCollectionChooser()};
  document.getElementById("collectionBooster").onclick=()=>{let b=document.getElementById("collectionBoostbar");b.style.display=b.style.display==="none"?"flex":"none";if(b.style.display==="flex"){document.getElementById("collectionBoostNum").blur();window.scrollTo({top:0,left:0,behavior:"instant"})}};
  document.getElementById("collectionBoostGo").onclick=()=>{let i=+document.getElementById("collectionBoostSet").value,n=+document.getElementById("collectionBoostNum").value;if(!n||n<1||n>S[i][3])return;cur=i;home=false;location.hash="set="+encodeURIComponent(S[i][0]);document.getElementById("q").value=String(n).padStart(3,"0");render()}
 }
-async async function renderCollectionValidityAudit(){
- searchMode("home");home=false;navOn("navCollection");
- document.getElementById("homeactions").style.display="none";document.getElementById("boostbar").style.display="none";
- document.querySelector(".setcontrols").style.display="none";document.getElementById("setfilters").style.display="none";
- document.getElementById("grid").innerHTML="";
- const target=document.getElementById("sum");
- target.innerHTML='<section class="collectionPricePage"><button class="backbtn" id="auditBack">← Collectie</button><h2>🔍 Controle volledige collectie</h2><p>Controleert je geregistreerde kaarten op bestaan, set, kaartnummer en uitvoering met TCGdex. Dit verandert of verwijdert geen kaarten.</p><button id="auditStart" class="collectionPriceEntry">🔎 Start volledige controle</button><div id="auditStatus" aria-live="polite"></div><div id="auditResults"></div></section>';
- document.getElementById("auditBack").onclick=renderCollectionChooser;
- const start=document.getElementById("auditStart"),status=document.getElementById("auditStatus"),out=document.getElementById("auditResults");
- start.onclick=async()=>{
-  start.disabled=true;out.innerHTML="";status.textContent="Collectie ophalen…";
-  try{
-   const {data:{user},error:authError}=await sb.auth.getUser();
-   if(authError)throw authError;
-   let rows=[];
-   if(user){
-    const {data,error}=await sb.from("collection_cards").select("set_id,card_number,variant,quantity").eq("user_id",user.id).limit(10000);
-    if(error)throw error;
-    rows=data||[];
-   }else{
-    S.forEach(set=>nums(set).forEach(n=>V.forEach(v=>{const quantity=vqty(set,n,v);if(quantity>0)rows.push({set_id:set[2],card_number:String(n).padStart(3,"0"),variant:v,quantity})})));
-   }
-   if(!rows.length){status.textContent="Geen geregistreerde kaarten gevonden.";return}
-   const result=new Array(rows.length);let next=0,done=0;
-   const cache=new Map();
-   const worker=async()=>{while(next<rows.length){
-    const i=next++,row=rows[i],set=S.find(x=>x[2]===row.set_id),n=String(row.card_number||"").trim();
-    if(!set){result[i]={status:"invalid",reason:"Set bestaat niet in de websitecatalogus"};done++;continue}
-    const lang=set._lang||"en",setId=set[2],key=lang+"/"+setId+"/"+n.replace(/^0+(?=\d)/,"");
-    if(!cache.has(key))cache.set(key,(async()=>{
-     try{
-      const response=await fetch("https://api.tcgdex.net/v2/"+encodeURIComponent(lang)+"/cards/"+encodeURIComponent(setId+"-"+n),{headers:{Accept:"application/json"}});
-      if(response.status===404)return {missing:true};
-      if(!response.ok)return {error:"API-fout "+response.status};
-      return {card:await response.json()};
-     }catch(e){return {error:"Verbinding met TCGdex mislukt"}}
-    })());
-    const api=await cache.get(key);
-    if(api.error){result[i]={status:"unknown",reason:api.error};done++;continue}
-    if(api.missing){result[i]={status:"unknown",reason:"Kaartnummer niet gevonden in TCGdex; handmatige controle nodig"};done++;continue}
-    const card=api.card;
-    if(String(card.set?.id||"").toLowerCase()!==String(setId).toLowerCase()||String(card.localId||"").replace(/^0+(?=\d)/,"")!==n.replace(/^0+(?=\d)/,"")){
-      result[i]={status:"unknown",reason:"Set of kaartnummer komt niet overeen"};done++;continue;
-    }
-    const v=String(row.variant||"").toLowerCase(),variants=card.variants||{};
-    const rarity=String(card.rarity||"").toLowerCase();
-    const special=rarity.includes("special illustration")?"sir":rarity.includes("illustration rare")?"ir":rarity.includes("mega hyper")||rarity.includes("hyper rare")?"mhr/hr":rarity.includes("ultra rare")||rarity.includes("full art")?"ur":null;
-    const expected={normal:variants.normal,holo:variants.holo,reverse:variants.reverse,"1st edition":variants.firstEdition,"w promo":variants.wPromo};
-    let valid;
-    if(["ir","ur","sir","mhr/hr"].includes(v))valid=special===v;
-    else if(v==="pokémon day 2026")valid=set[0]==="Temporal Forces"&&Number(n)===51;
-    else if(Object.prototype.hasOwnProperty.call(expected,v))valid=typeof expected[v]==="boolean"?expected[v]:null;
-    else valid=null;
-    result[i]=valid===true?{status:"valid",reason:"Bevestigd"}:valid===false?{status:"invalid",reason:"Uitvoering bestaat niet voor deze kaart"}:{status:"unknown",reason:"Uitvoering niet te verifiëren"};
-    done++;if(done%10===0||done===rows.length)status.textContent="Gecontroleerd: "+done+" / "+rows.length;
-   }};
-   await Promise.all(Array.from({length:Math.min(5,rows.length)},()=>worker()));
-   let valid=0,invalid=0,unknown=0;const issues=[];
-   rows.forEach((row,i)=>{const r=result[i]||{status:"unknown",reason:"Geen antwoord"};if(r.status==="valid")valid++;else{if(r.status==="invalid")invalid++;else unknown++;issues.push({row,...r})}});
-   status.textContent="Controle afgerond: "+rows.length+" registraties.";
-   out.innerHTML='<div class="priceSummary"><strong>✅ Geldig: '+valid+'</strong><strong>⚠️ Afwijkend: '+invalid+'</strong><strong>❔ Niet geverifieerd: '+unknown+'</strong></div><p>Geen kaarten zijn aangepast. Een afwijking is een signaal om te controleren; controleer bijzondere promoties en taalversies handmatig.</p><details open><summary>Bekijk afwijkingen en onzekerheden ('+issues.length+')</summary>'+issues.map(x=>'<div class="priceSetRow"><b>'+marketEscape(tradeCardLabel(x.row))+'</b><small>'+(x.status==="invalid"?"⚠️ Afwijkend: ":"❔ Niet geverifieerd: ")+marketEscape(x.reason)+'</small></div>').join("")+'</details>';
-  }catch(e){status.textContent="Controle niet afgerond: "+String(e?.message||e)}
-  finally{start.disabled=false}
- };
-}
-function renderCollectionPrices(){
+async function renderCollectionPrices(){
  searchMode("home");home=false;navOn("navCollection");
  document.getElementById("homeactions").style.display="none";document.getElementById("boostbar").style.display="none";document.querySelector(".setcontrols").style.display="none";document.getElementById("setfilters").style.display="none";
  const sum=document.getElementById("sum"),grid=document.getElementById("grid");grid.innerHTML="";
  sum.innerHTML='<section class="collectionPricePage"><button class="backbtn" id="priceBack">← Collectie</button><h2>💎 Prijzen & Waarde</h2><p>Controleer de prijzen van je eigen kaarten.</p><select id="priceSet"></select><button id="priceRun">🔎 Controleer prijzen</button><div id="priceResults"></div></section>';
  document.getElementById("priceBack").onclick=renderCollectionChooser;
- const rows=[],excluded=[];S.forEach(set=>nums(set).forEach(n=>V.forEach(v=>{let quantity=vqty(set,n,v);if(quantity<=0)return;let row={set_id:set[2],card_number:String(n).padStart(3,"0"),variant:v,quantity};if(!availableVariants(set,n).includes(v)){excluded.push(row);return}rows.push(row)})));
+ const rows=[];S.forEach(set=>nums(set).forEach(n=>V.forEach(v=>{let quantity=vqty(set,n,v);if(quantity>0)rows.push({set_id:set[2],card_number:String(n).padStart(3,"0"),variant:v,quantity})})));
  const ids=[...new Set(rows.map(x=>x.set_id))],sel=document.getElementById("priceSet"),btn=document.getElementById("priceRun"),out=document.getElementById("priceResults");
  sel.innerHTML='<option value="all">Hele collectie ('+rows.length+')</option>'+ids.map(id=>'<option value="'+marketEscape(id)+'">'+marketEscape(S.find(s=>s[2]===id)?.[0]||id)+'</option>').join("");
- out.textContent=rows.length+' geldige kaartuitvoeringen. '+(excluded.length?excluded.length+' afwijkende registraties uitgesloten. ':'')+'Kies een set en druk op Controleer prijzen.';btn.disabled=!rows.length;
+ out.textContent=rows.length+' unieke kaartuitvoeringen. Kies een set en druk op Controleer prijzen.';btn.disabled=!rows.length;
  btn.onclick=async()=>{
   const items=sel.value==="all"?rows:rows.filter(x=>x.set_id===sel.value),prices=new Array(items.length);let cursor=0,done=0;btn.disabled=true;sel.disabled=true;
   out.textContent='Prijzen ophalen: 0 / '+items.length;
@@ -635,8 +570,8 @@ async function tradePriceFor(r){
  if(!set)return {reason:"Set onbekend"};
  const v=String(r.variant||"").toLowerCase(),number=parseInt(r.card_number,10);
  if(!Number.isInteger(number)||number<1)return {reason:"Kaartnummer onbekend"};
- const normal=v==="normal",holo=v==="holo",reverse=v==="reverse"||v==="reverse holo"||v==="reverseholo",special=["ir","ur","sir","mhr/hr"].includes(v);
- if(!normal&&!holo&&!reverse&&!special)return {reason:"Geen betrouwbare prijs voor deze uitvoering"};
+ const normal=v==="normal",holo=v==="holo",reverse=v==="reverse"||v==="reverse holo"||v==="reverseholo";
+ if(!normal&&!holo&&!reverse)return {reason:"Geen betrouwbare prijs voor deze uitvoering"};
  const raw=String(set._cat||"");
  const lang=raw.match(/^([a-z]{2}):/)?.[1]||"en";
  if(lang!=="en")return {reason:"Prijs voor deze taal niet gecontroleerd"};
@@ -655,9 +590,6 @@ async function tradePriceFor(r){
     if(String(data.id||"").toLowerCase()!==id.toLowerCase()||String(data.localId||"").replace(/^0+/,"")!==String(number))
       return {reason:"Kaart-ID komt niet overeen"};
     const variants=data.variants||{};
-    const rarity=String(data.rarity||"").toLowerCase();
-    const specialKind=rarity.includes("special illustration")?"sir":rarity.includes("illustration rare")?"ir":rarity.includes("mega hyper")||rarity.includes("hyper rare")?"mhr/hr":rarity.includes("ultra rare")||rarity.includes("full art")?"ur":null;
-    if(special&&specialKind!==v)return {reason:"Deze zeldzaamheid hoort niet bij dit kaartnummer"};
     const detailed=Array.isArray(data.variants_detailed)?data.variants_detailed:[];
     const variantPrice=detailed.find(x=>{
       const kind=String(x.variant||x.type||x.name||"").toLowerCase();
@@ -669,7 +601,7 @@ async function tradePriceFor(r){
     const pick=(...values)=>values.find(x=>typeof x==="number"&&Number.isFinite(x)&&x>=0);
     const onlyHolo=variants.holo===true&&variants.normal===false&&variants.reverse===false;
     const onlyReverse=variants.reverse===true&&variants.normal===false&&variants.holo===false;
-    const amount=special?pick(p.trend,p.avg30,p.avg7,p.avg):reverse?(variantPrice?pick(p.trend,p.avg30,p.avg,p["trend-holo"],p["avg-holo"]):onlyReverse?pick(p.trend,p.avg30,p.avg):undefined):
+    const amount=reverse?(variantPrice?pick(p.trend,p.avg30,p.avg,p["trend-holo"],p["avg-holo"]):onlyReverse?pick(p.trend,p.avg30,p.avg):undefined):
       holo?pick(p["trend-holo"],p["avg30-holo"],p["avg-holo"],onlyHolo?p.trend:undefined,onlyHolo?p.avg30:undefined):
       pick(p.trend,p.avg30,p.avg7,p.avg);
     if(normal&&variants.normal===false)return {reason:"Normale uitvoering niet beschikbaar"};
