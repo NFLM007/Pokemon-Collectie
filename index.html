@@ -342,6 +342,7 @@ function verifyCatalogCard(s,n){
    const d=await res.json();
    if(String(d.localId||"").replace(/^0+/,"")!==String(n))return;
    meta[k]={...meta[k],name:d.name||current?.name,rarity:d.rarity||"",variants:d.variants||{},image:d.image||current?.image,_verified:true};
+   if(!window._catalogRefreshTimer)window._catalogRefreshTimer=setTimeout(()=>{window._catalogRefreshTimer=null;if(activeView==="binder")renderBinder();else if(activeView==="collection")render()},350);
    return meta[k];
   }catch(e){console.warn("Catalog card verification",k,e)}
   finally{verifiedCardRequests.delete(k)}
