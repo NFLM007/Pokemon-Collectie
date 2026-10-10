@@ -295,7 +295,7 @@ const CSVQ_OLD={"Chaos Rising#21#Normal":2,"Perfect Order#82#Normal":3,"Mega Evo
 function key(s,n){return s[0]+"#"+n}
 function vkey(s,n,v){return key(s,n)+"#"+v}
 function legacy(s,n){let k=key(s,n);return k in store?store[k]:s[4].includes(n)}
-function vqty(s,n,v){let q=store[vkey(s,n,v)+"#qty"];if(Number.isFinite(+q))return +q;if(!useSeed)return 0;let a=seed[key(s,n)];if(Array.isArray(a)){let base=a.filter(x=>x===v).length;if(!base&&["IR","UR","SIR","MHR/HR"].includes(v))base=a.filter(x=>x==="Holo").length;if(base){return base}}let k=vkey(s,n,v);if(k in store)return store[k]?1:0;return 0}
+function vqty(s,n,v){let q=store[vkey(s,n,v)+"#qty"];if(Number.isFinite(+q))return +q;if(!useSeed)return 0;let a=seed[key(s,n)];if(Array.isArray(a)){let base=a.filter(x=>x===v).length;/* No synthetic rare variants from holo seed */if(base){return base}}let k=vkey(s,n,v);if(k in store)return store[k]?1:0;return 0}
 function vhas(s,n,v){return vqty(s,n,v)>0}
 function ownedVariants(s,n){return V.filter(v=>vhas(s,n,v))}
 function has(s,n){return ownedVariants(s,n).length>0}
@@ -392,10 +392,10 @@ async function renderCollectionPrices(){
  const sum=document.getElementById("sum"),grid=document.getElementById("grid");grid.innerHTML="";
  sum.innerHTML='<section class="collectionPricePage"><button class="backbtn" id="priceBack">← Collectie</button><h2>💎 Prijzen & Waarde</h2><p>Controleer de prijzen van je eigen kaarten.</p><select id="priceSet"></select><button id="priceRun">🔎 Controleer prijzen</button><div id="priceResults"></div></section>';
  document.getElementById("priceBack").onclick=renderCollectionChooser;
- const rows=[];S.forEach(set=>nums(set).forEach(n=>V.forEach(v=>{let quantity=vqty(set,n,v);if(quantity>0)rows.push({set_id:set[2],card_number:String(n).padStart(3,"0"),variant:v,quantity})})));
+ const rows=[],excluded=[];S.forEach(set=>nums(set).forEach(n=>V.forEach(v=>{let quantity=vqty(set,n,v);if(quantity<=0)return;let row={set_id:set[2],card_number:String(n).padStart(3,"0"),variant:v,quantity};if(!availableVariants(set,n).includes(v)){excluded.push(row);return}rows.push(row)})));
  const ids=[...new Set(rows.map(x=>x.set_id))],sel=document.getElementById("priceSet"),btn=document.getElementById("priceRun"),out=document.getElementById("priceResults");
  sel.innerHTML='<option value="all">Hele collectie ('+rows.length+')</option>'+ids.map(id=>'<option value="'+marketEscape(id)+'">'+marketEscape(S.find(s=>s[2]===id)?.[0]||id)+'</option>').join("");
- out.textContent=rows.length+' unieke kaartuitvoeringen. Kies een set en druk op Controleer prijzen.';btn.disabled=!rows.length;
+ out.textContent=rows.length+' geldige kaartuitvoeringen. '+(excluded.length?excluded.length+' afwijkende registraties uitgesloten. ':'')+'Kies een set en druk op Controleer prijzen.';btn.disabled=!rows.length;
  btn.onclick=async()=>{
   const items=sel.value==="all"?rows:rows.filter(x=>x.set_id===sel.value),prices=new Array(items.length);let cursor=0,done=0;btn.disabled=true;sel.disabled=true;
   out.textContent='Prijzen ophalen: 0 / '+items.length;
@@ -570,8 +570,8 @@ async function tradePriceFor(r){
  if(!set)return {reason:"Set onbekend"};
  const v=String(r.variant||"").toLowerCase(),number=parseInt(r.card_number,10);
  if(!Number.isInteger(number)||number<1)return {reason:"Kaartnummer onbekend"};
- const normal=v==="normal",holo=v==="holo",reverse=v==="reverse"||v==="reverse holo"||v==="reverseholo";
- if(!normal&&!holo&&!reverse)return {reason:"Geen betrouwbare prijs voor deze uitvoering"};
+ const normal=v==="normal",holo=v==="holo",reverse=v==="reverse"||v==="reverse holo"||v==="reverseholo",special=["ir","ur","sir","mhr/hr"].includes(v);
+ if(!normal&&!holo&&!reverse&&!special)return {reason:"Geen betrouwbare prijs voor deze uitvoering"};
  const raw=String(set._cat||"");
  const lang=raw.match(/^([a-z]{2}):/)?.[1]||"en";
  if(lang!=="en")return {reason:"Prijs voor deze taal niet gecontroleerd"};
@@ -590,6 +590,9 @@ async function tradePriceFor(r){
     if(String(data.id||"").toLowerCase()!==id.toLowerCase()||String(data.localId||"").replace(/^0+/,"")!==String(number))
       return {reason:"Kaart-ID komt niet overeen"};
     const variants=data.variants||{};
+    const rarity=String(data.rarity||"").toLowerCase();
+    const specialKind=rarity.includes("special illustration")?"sir":rarity.includes("illustration rare")?"ir":rarity.includes("mega hyper")||rarity.includes("hyper rare")?"mhr/hr":rarity.includes("ultra rare")||rarity.includes("full art")?"ur":null;
+    if(special&&specialKind!==v)return {reason:"Deze zeldzaamheid hoort niet bij dit kaartnummer"};
     const detailed=Array.isArray(data.variants_detailed)?data.variants_detailed:[];
     const variantPrice=detailed.find(x=>{
       const kind=String(x.variant||x.type||x.name||"").toLowerCase();
@@ -601,7 +604,7 @@ async function tradePriceFor(r){
     const pick=(...values)=>values.find(x=>typeof x==="number"&&Number.isFinite(x)&&x>=0);
     const onlyHolo=variants.holo===true&&variants.normal===false&&variants.reverse===false;
     const onlyReverse=variants.reverse===true&&variants.normal===false&&variants.holo===false;
-    const amount=reverse?(variantPrice?pick(p.trend,p.avg30,p.avg,p["trend-holo"],p["avg-holo"]):onlyReverse?pick(p.trend,p.avg30,p.avg):undefined):
+    const amount=special?pick(p.trend,p.avg30,p.avg7,p.avg):reverse?(variantPrice?pick(p.trend,p.avg30,p.avg,p["trend-holo"],p["avg-holo"]):onlyReverse?pick(p.trend,p.avg30,p.avg):undefined):
       holo?pick(p["trend-holo"],p["avg30-holo"],p["avg-holo"],onlyHolo?p.trend:undefined,onlyHolo?p.avg30:undefined):
       pick(p.trend,p.avg30,p.avg7,p.avg);
     if(normal&&variants.normal===false)return {reason:"Normale uitvoering niet beschikbaar"};
