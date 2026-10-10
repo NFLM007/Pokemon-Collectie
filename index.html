@@ -568,23 +568,29 @@ async function tradePriceFor(r){
     const data=await response.json();
     if(String(data.id||"").toLowerCase()!==id.toLowerCase()||String(data.localId||"").replace(/^0+/,"")!==String(number))
       return {reason:"Kaart-ID komt niet overeen"};
-    const p=data.pricing?.cardmarket;
+    const variants=data.variants||{};
+    const detailed=Array.isArray(data.variants_detailed)?data.variants_detailed:[];
+    const variantPrice=detailed.find(x=>{
+      const kind=String(x.variant||x.type||x.name||"").toLowerCase();
+      return reverse?kind.includes("reverse"):holo?(kind.includes("holo")&&!kind.includes("reverse")):(kind.includes("normal")||kind.includes("non-holo"));
+    })?.pricing?.cardmarket;
+    const p=variantPrice||data.pricing?.cardmarket;
     if(!p)return {reason:"TCGdex heeft geen Cardmarket-prijs voor deze kaart"};
     if(p.unit&&p.unit!=="EUR")return {reason:"Prijs is niet in euro"};
-    const variants=data.variants||{};
+    const pick=(...values)=>values.find(x=>typeof x==="number"&&Number.isFinite(x)&&x>=0);
+    const onlyHolo=variants.holo===true&&variants.normal===false&&variants.reverse===false;
+    const onlyReverse=variants.reverse===true&&variants.normal===false&&variants.holo===false;
+    const amount=reverse?(variantPrice?pick(p.trend,p.avg30,p.avg,p["trend-holo"],p["avg-holo"]):onlyReverse?pick(p.trend,p.avg30,p.avg):undefined):
+      holo?pick(p["trend-holo"],p["avg30-holo"],p["avg-holo"],onlyHolo?p.trend:undefined,onlyHolo?p.avg30:undefined):
+      pick(p.trend,p.avg30,p.avg7,p.avg);
     if(normal&&variants.normal===false)return {reason:"Normale uitvoering niet beschikbaar"};
     if(holo&&variants.holo===false)return {reason:"Holo-uitvoering niet beschikbaar"};
     if(reverse&&variants.reverse===false)return {reason:"Reverse-uitvoering niet beschikbaar"};
-    const pick=(...values)=>values.find(x=>typeof x==="number"&&Number.isFinite(x)&&x>=0);
-    const onlyHolo=variants.holo===true&&variants.normal===false&&variants.reverse===false;
-    const amount=reverse?pick(p["trend-reverse-holo"],p["avg-reverse-holo"]):
-      holo?pick(p["trend-holo"],p["avg-holo"],onlyHolo?p.trend:undefined,onlyHolo?p.avg30:undefined):
-      pick(p.trend,p.avg30,p.avg7,p.avg);
     if(amount===undefined)return {reason:"Geen afzonderlijke Cardmarket-prijs voor deze uitvoering"};
-    const date=p.updated?new Date(p.updated):null;
+    const date=(p.updated||data.pricing?.cardmarket?.updated)?new Date(p.updated||data.pricing.cardmarket.updated):null;
     const validDate=date&&Number.isFinite(date.getTime());
     const age=validDate?(Date.now()-date.getTime())/86400000:null;
-    return {amount,date:validDate?p.updated:null,stale:age!==null&&age>30,source:"Cardmarket via TCGdex",id};
+    return {amount,date:validDate?(p.updated||data.pricing?.cardmarket?.updated):null,stale:age!==null&&age>30,source:"Cardmarket via TCGdex",id};
    }catch(e){return {reason:"Prijsbron niet bereikbaar: "+String(e?.message||"netwerkfout").slice(0,65)}}
   })();
   tradePriceCache.set(cacheKey,request);
