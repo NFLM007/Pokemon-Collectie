@@ -525,4 +525,7 @@ window.addEventListener("hashchange",()=>{
   if(i>=0){cur=i;home=false;document.getElementById("main").classList.add("inset");document.querySelector(".setcontrols").style.display="flex";document.getElementById("setfilters").style.display="flex";syncFilterButtons();render()}
 });
 init();
+if("serviceWorker" in navigator&&location.protocol==="https:"){
+ window.addEventListener("load",()=>{navigator.serviceWorker.register("./image-cache-sw.js",{scope:"./"}).catch(e=>console.warn("Image caching unavailable:",e))},{once:true});
+}
 </script></div><!-- deploy-game-corner-v1 --></body></html>
