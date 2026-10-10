@@ -437,7 +437,7 @@ async async function renderCollectionValidityAudit(){
     let valid;
     if(["ir","ur","sir","mhr/hr"].includes(v))valid=special===v;
     else if(v==="pokémon day 2026")valid=set[0]==="Temporal Forces"&&Number(n)===51;
-    else if(Object.prototype.hasOwnProperty.call(expected,v))valid=expected[v]===true;
+    else if(Object.prototype.hasOwnProperty.call(expected,v))valid=typeof expected[v]==="boolean"?expected[v]:null;
     else valid=null;
     result[i]=valid===true?{status:"valid",reason:"Bevestigd"}:valid===false?{status:"invalid",reason:"Uitvoering bestaat niet voor deze kaart"}:{status:"unknown",reason:"Uitvoering niet te verifiëren"};
     done++;if(done%10===0||done===rows.length)status.textContent="Gecontroleerd: "+done+" / "+rows.length;
