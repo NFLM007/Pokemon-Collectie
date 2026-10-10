@@ -583,8 +583,9 @@ async function tradePriceFor(r){
 async function tradePricePanel(el,offer,want){
  if(!el||!el.isConnected)return;
  el.innerHTML='<p>💶 Cardmarket-prijzen laden…</p>';
- const rows=[...offer,...want],prices=await Promise.all(rows.map(tradePriceFor));
- if(!el.isConnected)return;
+ const requestId=String(Date.now())+"-"+Math.random();el.dataset.priceRequest=requestId;
+ const rows=[...offer.map(x=>({...x})),...want.map(x=>({...x}))],prices=await Promise.all(rows.map(tradePriceFor));
+ if(!el.isConnected||el.dataset.priceRequest!==requestId)return;
  const side=(arr,offset)=>{
   let total=0,unknown=0;
   const lines=arr.map((r,i)=>{
@@ -621,7 +622,7 @@ async function renderTradeCenter(uid,p){
  const compose=document.getElementById("tradeCompose");
  const offered=[],wanted=[];
  const cardKey=x=>x.set_id+"|"+x.card_number+"|"+x.variant;
- const drawPick=(arr,rows,id)=>{const el=document.getElementById(id);el.innerHTML=arr.map((x,i)=>'<div class="tradePicked">'+tradeCardVisual(x,"×"+x.quantity)+'<input type="number" aria-label="Aantal" min="1" max="'+rows.find(r=>cardKey(r)===cardKey(x)).quantity+'" value="'+x.quantity+'" data-qty="'+i+'"><button type="button" data-remove="'+i+'">✕</button></div>').join("")||'<p>Voeg kaarten toe.</p>';el.querySelectorAll("[data-remove]").forEach(b=>b.onclick=()=>{arr.splice(+b.dataset.remove,1);drawPick(arr,rows,id);updateTradeValue()});el.querySelectorAll("[data-qty]").forEach(inp=>inp.onchange=()=>{let x=arr[+inp.dataset.qty],max=rows.find(r=>cardKey(r)===cardKey(x)).quantity;x.quantity=Math.max(1,Math.min(max,Math.floor(+inp.value||1)));inp.value=x.quantity});updateTradeValue()};
+ const drawPick=(arr,rows,id)=>{const el=document.getElementById(id);el.innerHTML=arr.map((x,i)=>'<div class="tradePicked">'+tradeCardVisual(x,"×"+x.quantity)+'<input type="number" aria-label="Aantal" min="1" max="'+rows.find(r=>cardKey(r)===cardKey(x)).quantity+'" value="'+x.quantity+'" data-qty="'+i+'"><button type="button" data-remove="'+i+'">✕</button></div>').join("")||'<p>Voeg kaarten toe.</p>';el.querySelectorAll("[data-remove]").forEach(b=>b.onclick=()=>{arr.splice(+b.dataset.remove,1);drawPick(arr,rows,id);updateTradeValue()});el.querySelectorAll("[data-qty]").forEach(inp=>inp.onchange=()=>{let x=arr[+inp.dataset.qty],max=rows.find(r=>cardKey(r)===cardKey(x)).quantity;x.quantity=Math.max(1,Math.min(max,Math.floor(+inp.value||1)));inp.value=x.quantity;updateTradeValue()})};
  compose.innerHTML=own.length&&theirs.length?'<form id="tradeForm"><h3>🃏 Mijn aanbod</h3><div class="tradeAddRow"><select id="tradeOfferPick">'+options(own)+'</select><button type="button" id="tradeOfferAdd">+ Toevoegen</button></div><div id="tradeOfferedList"></div><h3>🎯 Ik wil ontvangen</h3><div class="tradeAddRow"><select id="tradeWantPick">'+options(theirs)+'</select><button type="button" id="tradeWantAdd">+ Toevoegen</button></div><div id="tradeWantedList"></div><label>💬 Bericht (optioneel)<textarea name="note" maxlength="500"></textarea></label><button type="submit">🔄 Verstuur ruilvoorstel</button></form>':'<p>Jullie moeten allebei kaarten bezitten.</p>';
 
  // Smart matching: only spare copies (quantity > 1), exact set/number/variant.
