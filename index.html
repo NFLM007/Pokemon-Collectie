@@ -425,9 +425,9 @@ async async function renderCollectionValidityAudit(){
     })());
     const api=await cache.get(key);
     if(api.error){result[i]={status:"unknown",reason:api.error};done++;continue}
-    if(api.missing){result[i]={status:"invalid",reason:"Kaartnummer niet gevonden bij TCGdex"};done++;continue}
+    if(api.missing){result[i]={status:"unknown",reason:"Kaartnummer niet gevonden in TCGdex; handmatige controle nodig"};done++;continue}
     const card=api.card;
-    if(String(card.set?.id||"").toLowerCase()!==String(setId).toLowerCase()||String(card.localId||"").replace(/^0+(?=\d)/,"")!==n.replace(/^0+(?\d)/,"")){
+    if(String(card.set?.id||"").toLowerCase()!==String(setId).toLowerCase()||String(card.localId||"").replace(/^0+(?=\d)/,"")!==n.replace(/^0+(?=\d)/,"")){
       result[i]={status:"unknown",reason:"Set of kaartnummer komt niet overeen"};done++;continue;
     }
     const v=String(row.variant||"").toLowerCase(),variants=card.variants||{};
