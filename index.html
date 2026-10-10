@@ -567,13 +567,16 @@ async function tradePriceFor(r){
     if(String(data.id||"").toLowerCase()!==id.toLowerCase())return {reason:"Kaart-ID komt niet overeen"};
     const p=data.pricing?.cardmarket;
     if(!p||p.unit!=="EUR")return {reason:"Geen Cardmarket-prijs in euro"};
-    const amount=holo?(p["trend-holo"]??p["avg30-holo"]):(p.trend??p.avg30);
+    const variants=data.variants||{};
+    const holoOnly=variants.holo===true&&variants.normal===false&&variants.reverse===false;
+    const holoPrice=(p["trend-holo"]>0?p["trend-holo"]:null)??(p["avg30-holo"]>0?p["avg30-holo"]:null);
+    const amount=holo?(holoPrice??(holoOnly?(p.trend??p.avg30):null)):(p.trend??p.avg30);
     if(typeof amount!=="number"||!Number.isFinite(amount)||amount<0)return {reason:"Prijs voor deze uitvoering onbekend"};
     const date=p.updated?new Date(p.updated):null;
     if(!date||!Number.isFinite(date.getTime()))return {reason:"Peildatum ontbreekt"};
     const age=(Date.now()-date.getTime())/86400000;
-    if(age>30||age< -2)return {reason:"Prijsgegevens zijn verouderd"};
-    return {amount,date:p.updated,source:"Cardmarket via TCGdex",kind:"Vraagprijs/trend",id};
+    if(age< -2)return {reason:"Ongeldige prijsdatum"};
+    return {amount,date:p.updated,stale:age>30,source:"Cardmarket via TCGdex",kind:"Prijsindicatie/trend",id};
    }catch(e){return {reason:"Prijsbron tijdelijk niet bereikbaar"}}
   })();
   tradePriceCache.set(cacheKey,request);
