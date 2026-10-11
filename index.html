@@ -295,7 +295,7 @@ const CSVQ_OLD={"Chaos Rising#21#Normal":2,"Perfect Order#82#Normal":3,"Mega Evo
 function key(s,n){return s[0]+"#"+n}
 function vkey(s,n,v){return key(s,n)+"#"+v}
 function legacy(s,n){let k=key(s,n);return k in store?store[k]:s[4].includes(n)}
-function vqty(s,n,v){let q=store[vkey(s,n,v)+"#qty"];if(Number.isFinite(+q))return +q;if(!useSeed)return 0;let a=seed[key(s,n)];if(Array.isArray(a)){let base=a.filter(x=>x===v).length;if(!base&&["IR","UR","SIR","MHR/HR"].includes(v))base=a.filter(x=>x==="Holo").length;if(base){return base}}let k=vkey(s,n,v);if(k in store)return store[k]?1:0;return 0}
+function vqty(s,n,v){let q=store[vkey(s,n,v)+"#qty"];if(Number.isFinite(+q))return +q;if(!useSeed)return 0;let a=seed[key(s,n)];if(Array.isArray(a)){let base=a.filter(x=>x===v).length;/* Rare variants must not be inferred from a Holo seed. */if(base){return base}}let k=vkey(s,n,v);if(k in store)return store[k]?1:0;return 0}
 function vhas(s,n,v){return vqty(s,n,v)>0}
 function ownedVariants(s,n){return V.filter(v=>vhas(s,n,v))}
 function has(s,n){return ownedVariants(s,n).length>0}
